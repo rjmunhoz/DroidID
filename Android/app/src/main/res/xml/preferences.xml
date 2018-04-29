@@ -4,6 +4,15 @@
         android:defaultValue="false"
         android:summary="Show persistent notification to launch the unlock UI."
         android:key="persistentNotif" />
+
+    <ListPreference android:title="Notification Priority"
+        android:defaultValue="-2"
+        android:summary="Persistent notification priority"
+        android:key="persistentNotifPriority"
+        android:dependency="persistentNotif"
+        android:entries="@array/priorityLevelNames"
+        android:entryValues="@array/priorityLevelValues" />
+
     <Preference android:title="Unlink"
         android:key="unlinkDevice"
         android:summary="Unlink this phone from DroidID"/>

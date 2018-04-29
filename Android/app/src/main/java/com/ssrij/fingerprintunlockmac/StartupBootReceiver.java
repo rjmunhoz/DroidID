@@ -26,6 +26,9 @@ public class StartupBootReceiver extends BroadcastReceiver {
     }
 
     public void showUnlockNotification(Context context) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+
+        int notificationPriority = Integer.parseInt(preferences.getString("persistentNotifPriority", "-2"));
 
         PendingIntent contentIntent = PendingIntent.getActivity(context, 0,
                 new Intent(context, ScanActivity.class), PendingIntent.FLAG_CANCEL_CURRENT);
@@ -37,7 +40,7 @@ public class StartupBootReceiver extends BroadcastReceiver {
                                 R.drawable.ic_fingerprint_black_48dp))
                         .setContentTitle("Unlock Mac")
                         .setContentText("Press this notification to open unlock UI")
-                        .setPriority(-2)
+                        .setPriority(notificationPriority)
                         .setContentIntent(contentIntent)
                         .setOngoing(true);
 

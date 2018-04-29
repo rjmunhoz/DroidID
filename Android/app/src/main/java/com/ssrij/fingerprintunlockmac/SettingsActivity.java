@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
+import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
@@ -41,6 +42,31 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     public static class SettingsFragment extends PreferenceFragment
     {
+
+        private void showNotification(int priority) {
+            PendingIntent contentIntent = PendingIntent.getActivity(getActivity().getApplicationContext(), 0,
+                    new Intent(getActivity().getApplicationContext(), ScanActivity.class), PendingIntent.FLAG_CANCEL_CURRENT);
+
+            NotificationCompat.Builder mBuilder =
+                    new NotificationCompat.Builder(getActivity().getApplicationContext())
+                            .setSmallIcon(R.drawable.ic_fingerprint_white_48dp)
+                            .setLargeIcon(BitmapFactory.decodeResource(getActivity().getApplicationContext().getResources(),
+                                    R.drawable.ic_fingerprint_black_48dp))
+                            .setContentTitle("Unlock Mac")
+                            .setContentText("Press this notification to open unlock UI")
+                            .setPriority(priority)
+                            .setContentIntent(contentIntent)
+                            .setOngoing(true);
+
+            NotificationManager notificationManager = (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.notify(999, mBuilder.build());
+        }
+
+        private void cancelNotification () {
+            NotificationManager notificationManager = (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.cancel(999);
+        }
+
         @Override
         public void onCreate(final Bundle savedInstanceState)
         {
@@ -83,27 +109,25 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             {
                 @Override
                 public boolean onPreferenceChange(final Preference preference, final Object newValue) {
-                    if ((Boolean)newValue == true) {
-                        PendingIntent contentIntent = PendingIntent.getActivity(getActivity().getApplicationContext(), 0,
-                                new Intent(getActivity().getApplicationContext(), ScanActivity.class), PendingIntent.FLAG_CANCEL_CURRENT);
+                    if ((Boolean) newValue) {
+                        SharedPreferences preferences = getPreferenceManager().getSharedPreferences();
 
-                        NotificationCompat.Builder mBuilder =
-                                new NotificationCompat.Builder(getActivity().getApplicationContext())
-                                        .setSmallIcon(R.drawable.ic_fingerprint_white_48dp)
-                                        .setLargeIcon(BitmapFactory.decodeResource(getActivity().getApplicationContext().getResources(),
-                                                R.drawable.ic_fingerprint_black_48dp))
-                                        .setContentTitle("Unlock Mac")
-                                        .setContentText("Press this notification to open unlock UI")
-                                        .setPriority(-2)
-                                        .setContentIntent(contentIntent)
-                                        .setOngoing(true);
+                        final int notificationPriority = Integer.parseInt(preferences.getString("persistentNotifPriority", "-2"));
 
-                        NotificationManager notificationManager = (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
-                        notificationManager.notify(999, mBuilder.build());
+                        SettingsFragment.this.showNotification(notificationPriority);
                     } else {
-                        NotificationManager notificationManager = (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
-                        notificationManager.cancel(999);
+                        SettingsFragment.this.cancelNotification();
                     }
+                    return true;
+                }
+            });
+
+            final ListPreference notifPriority = (ListPreference) findPreference("persistentNotifPriority");
+            notifPriority.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, final Object newValue) {
+                    SettingsFragment.this.cancelNotification();
+                    SettingsFragment.this.showNotification(Integer.parseInt((String) newValue));
                     return true;
                 }
             });
